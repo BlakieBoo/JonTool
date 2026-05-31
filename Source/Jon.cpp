@@ -21,7 +21,7 @@ bool Jon::LoadFromFile(uint8_t* dataPtr, int fileSize)
 	{
 		usedTextures[i] = *(C32BYTE*)data;
 		usedTextures[i] = usedTextures[i].substr(0, usedTextures[i].find_last_of("."));
-		usedTextures[i].resize(32);
+		usedTextures[i].reserve(32);
 		data += sizeof(C32BYTE);
 	}
 

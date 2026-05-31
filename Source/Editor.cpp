@@ -63,7 +63,7 @@ static enum BoxType
 	Vector
 };
 
-static BoxType CTYPE_Types[] =
+static const BoxType CTYPE_Types[] =
 {
 	Rect,
 	Rect,
@@ -223,7 +223,7 @@ static void DrawJonEdit()
 			if (ImGui::Button("Add Texture"))
 			{
 				jon->usedTextures.push_back(std::string());
-				jon->usedTextures[jon->usedTextures.size() - 1].resize(32);
+				jon->usedTextures[jon->usedTextures.size() - 1].reserve(32);
 			}
 		}
 
@@ -320,16 +320,16 @@ static void DrawJonEdit()
 			ImGui::Combo("Z Type", (int*)&sprite.zType, ZTYPE_Names, ZTYPE_NUM);
 
 			ImGui::SetNextItemWidth(130.0f);
-			ImGui::DragFloat("Z Offset", &sprite.zOffset);
+			ImGui::DragFloat("Z Offset", &sprite.zOffset, 0.01f);
 
 			ImGui::SetNextItemWidth(130.0f);
-			ImGui::DragFloat("Alpha", &sprite.alpha, 0.05f, 0.0f, 1.0f);
+			ImGui::DragFloat("Alpha", &sprite.alpha, 0.01f, 0.0f, 1.0f);
 
 			ImGui::SetNextItemWidth(160.0f);
 			ImGui::Combo("Blend Mode", (int*)&sprite.transType, TRANSTYPE_Names, TTYPE_NUM);
 
 			ImGui::SetNextItemWidth(130.0f);
-			ImGui::DragFloat("Rotation", &sprite.rotZ);
+			ImGui::DragFloat("Rotation", &sprite.rotZ, 0.05f);
 
 			ImGui::SetNextItemWidth(130.0f);
 			ImGui::DragFloat("Unknown 0", &sprite.unknown0);
@@ -338,13 +338,18 @@ static void DrawJonEdit()
 			ImGui::DragFloat("Unknown 1", &sprite.unknown1);
 
 			ImGui::SetNextItemWidth(130.0f);
-			ImGui::SliderInt("Texture", (int*)&sprite.spriteIndex, 0, jon->usedTextures.size());
 			if (jon->usedTextures.size())
 			{
-				if (sprite.spriteIndex)
-					ImGui::Text(jon->usedTextures[std::clamp(sprite.spriteIndex, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
+				ImGui::SliderInt("Texture", (int*)&sprite.spriteIndex, 0, jon->usedTextures.size() - 1);
+				if (jon->usedTextures.size())
+				{
+					if (sprite.spriteIndex)
+						ImGui::Text(jon->usedTextures[std::clamp(sprite.spriteIndex, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
+					else
+						ImGui::Text(jon->usedTextures[std::clamp((uint32_t)curSprite, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
+				}
 				else
-					ImGui::Text(jon->usedTextures[std::clamp((uint32_t)curSprite, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
+					ImGui::Text("Jon has no textures to use.");
 			}
 			else
 				ImGui::Text("Jon has no textures to use.");
