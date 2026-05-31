@@ -1,7 +1,9 @@
 #include "Common.hpp"
 #include "Editor.hpp"
+#include "Scene.hpp"
 #include <rlImGui.h>
 #include <imgui.h>
+#include <rlgl.h>
 
 int main(int argc, char* argv[])
 {
@@ -12,16 +14,16 @@ int main(int argc, char* argv[])
 	rlImGuiSetup(true);
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	rlDisableBackfaceCulling();
 
 	while (!WindowShouldClose())
 	{
 		BeginDrawing();
 		rlImGuiBegin();
 		ClearBackground({36, 33, 79, 255});
-		
-		DrawText("Hello World!", 300, 300, 32, RAYWHITE);
 
 		DrawEditor(GetFrameTime());
+		DrawScene();
 
 		rlImGuiEnd();
 		EndDrawing();

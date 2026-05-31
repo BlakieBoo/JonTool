@@ -1,5 +1,6 @@
 #include "Editor.hpp"
 
+#include "TextureList.hpp"
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
@@ -52,7 +53,7 @@ static const char* CTYPE_Names[] =
 	"Private Point 1",
 	"Private Point 2",
 	"Private Point 3",
-	"Extended Point (Faust Afro Pos)"
+	"Extra Point (Afro Pos)"
 };
 
 static enum BoxType
@@ -62,7 +63,7 @@ static enum BoxType
 	Vector
 };
 
-static BoxType CTYPE_Types[]
+static BoxType CTYPE_Types[] =
 {
 	Rect,
 	Rect,
@@ -168,6 +169,27 @@ static void DrawMenu()
 		ImGui::EndMenu();
 	}
 
+	if (ImGui::BeginMenu("Textures"))
+	{
+		if (ImGui::MenuItem("Load Textures"))
+		{
+			nfdpathset_t paths;
+			nfdresult_t result = NFD_OpenDialogMultiple("png,bmp,dds", NULL, &paths);
+
+			if (result == NFD_OKAY)
+				for (int i = 0; i < paths.count; i++)
+				{
+					std::string str = &paths.buf[paths.indices[i]];
+					LoadTex(str);
+				}
+		}
+
+		if (ImGui::MenuItem("Clear All Textures"))
+			ClearTexList();
+
+		ImGui::EndMenu();
+	}
+
 	ImGui::EndMainMenuBar();
 }
 
@@ -190,6 +212,8 @@ static void DrawJonEdit()
 	ImGui::Combo("Current Jon", &curJon, jonNames.data(), jonNames.size());
 
 	Jon* jon = loadedJons[curJon];
+
+	ImGui::InputText("Jon Name", &jon->jonName);
 
 	if (ImGui::TreeNode("Used Textures"))
 	{
@@ -318,9 +342,9 @@ static void DrawJonEdit()
 			if (jon->usedTextures.size())
 			{
 				if (sprite.spriteIndex)
-					ImGui::Text(jon->usedTextures[sprite.spriteIndex - 1].c_str());
-				else
 					ImGui::Text(jon->usedTextures[std::clamp(sprite.spriteIndex, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
+				else
+					ImGui::Text(jon->usedTextures[std::clamp((uint32_t)curSprite, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
 			}
 			else
 				ImGui::Text("Jon has no textures to use.");
@@ -489,4 +513,19 @@ void DrawEditor(float delta)
 
 	DrawJonEdit();
 	DrawTimeline(delta);
+}
+
+bool IsEditorHovered()
+{
+	ImGuiIO& io = ImGui::GetIO();
+
+	return ImGui::IsAnyItemHovered() || ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow) || io.WantCaptureMouse;
+}
+
+Jon* GetCurrentJon()
+{
+	if (!loadedJons.size())
+		return nullptr;
+
+	return loadedJons[curJon];
 }

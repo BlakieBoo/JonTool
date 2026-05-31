@@ -21,6 +21,8 @@ add_executable (JonTool
 	"Source/Main.cpp"
 	"Source/Jon.cpp"
 	"Source/Editor.cpp"
+	"Source/TextureList.cpp"
+	"Source/Scene.cpp"
 
 	"Lib/rlImGui/rlImGui.cpp"
 )
