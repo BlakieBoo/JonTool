@@ -8,3 +8,6 @@
 [submodule "Lib/rlImGui"]
 	path = Lib/rlImGui
 	url = https://github.com/raylib-extras/rlImGui
+[submodule "Lib/nativefiledialog"]
+	path = Lib/nativefiledialog
+	url = https://github.com/aarcangeli/nativefiledialog-cmake
