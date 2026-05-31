@@ -215,10 +215,12 @@ static void DrawJonEdit()
 			ImGui::SetNextItemWidth(50.0f);
 			if (ImGui::Button("Remove"))
 			{
-				i--;
 				jon->usedTextures.erase(jon->usedTextures.begin() + i);
+				i--;
 			}
 			ImGui::PopID();
+			if (!jon->usedTextures.size())
+				break;
 		}
 
 		ImGui::TreePop();
@@ -247,6 +249,8 @@ static void DrawJonEdit()
 			if (ImGui::Button("Remove Sprite"))
 			{
 				jon->sprites.erase(jon->sprites.begin() + curSprite);
+				if (!jon->sprites.size())
+					goto PopSpr;
 				if (curSprite >= jon->sprites.size())
 					curSprite = jon->sprites.size() - 1;
 			}
@@ -341,6 +345,7 @@ static void DrawJonEdit()
 			}
 		}
 
+		PopSpr:
 		ImGui::TreePop();
 	}
 
@@ -367,6 +372,8 @@ static void DrawJonEdit()
 			if (ImGui::Button("Remove Col"))
 			{
 				jon->collisions.erase(jon->collisions.begin() + curBox);
+				if (!jon->collisions.size())
+					goto PopCol;
 				if (curBox >= jon->collisions.size())
 					curBox = jon->collisions.size() - 1;
 			}
@@ -408,6 +415,7 @@ static void DrawJonEdit()
 			}
 		}
 
+		PopCol:
 		ImGui::TreePop();
 	}
 
