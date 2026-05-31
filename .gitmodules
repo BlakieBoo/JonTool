@@ -1,0 +1,10 @@
+[submodule "Lib/raylib"]
+	path = Lib/raylib
+	url = https://github.com/raysan5/raylib.git
+[submodule "Lib/imgui"]
+	path = Lib/imgui
+	url = https://github.com/BlakieBoo/imgui.git
+	branch = docking
+[submodule "Lib/rlImGui"]
+	path = Lib/rlImGui
+	url = https://github.com/raylib-extras/rlImGui
