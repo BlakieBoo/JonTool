@@ -17,7 +17,7 @@ void LoadTex(std::string& file)
 	std::replace(texName.begin(), texName.end(), '\\', '/');
 	texName = texName.substr(texName.find_last_of('/') + 1);
 	texName = texName.substr(0, texName.find_last_of('.'));
-
+	
 	Image img = LoadImage(file.c_str());
 	std::lock_guard lock = std::lock_guard(queueMutex);
 	imageQueue.push(img);

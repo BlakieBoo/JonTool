@@ -153,21 +153,29 @@ void DrawScene()
 
 	BeginMode2D(camera);
 
-	DrawLine(-10000, 0, 10000, 0, RAYWHITE);
-	DrawLine(0, -10000, 0, 10000, RAYWHITE);
+	if (!RefLinesShouldBeOnTop())
+	{
+		DrawLine(-10000, 0, 10000, 0, RAYWHITE);
+		DrawLine(0, -10000, 0, 10000, RAYWHITE);
+	}
 
 	Jon* curJon = GetCurrentJon();
 	if (!curJon)
 		goto End;
 	
 	for (int i = 0; i < curJon->sprites.size(); i++)
-		DrawSprite(curJon->sprites[i], curJon->usedTextures[std::clamp(curJon->sprites[i].spriteIndex > 0 ? curJon->sprites[i].spriteIndex : (uint32_t)i,
-			0u, (uint32_t)curJon->usedTextures.size() - 1)]);
+		DrawSprite(curJon->sprites[i], curJon->usedTextures[std::clamp(curJon->sprites[i].spriteIndex, 0u, (uint32_t)curJon->usedTextures.size() - 1)]);
 
 	BeginBlendMode(BLEND_ALPHA);
 
 	for (JonCollisionRect& box : curJon->collisions)
 		DrawBox(box);
+
+	if (RefLinesShouldBeOnTop())
+	{
+		DrawLine(-10000, 0, 10000, 0, RAYWHITE);
+		DrawLine(0, -10000, 0, 10000, RAYWHITE);
+	}
 
 	End:
 	EndMode2D();

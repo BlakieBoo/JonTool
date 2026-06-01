@@ -7,3 +7,5 @@ void DrawEditor(float delta);
 void DestroyEditor();
 bool IsEditorHovered();
 Jon* GetCurrentJon();
+
+bool RefLinesShouldBeOnTop();

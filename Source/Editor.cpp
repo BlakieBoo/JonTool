@@ -101,6 +101,8 @@ static std::thread* loadThread = nullptr;
 static bool loading = false;
 static bool forceEndLoading = false;
 
+static bool refLines = false;
+
 #define SaveBufferSize 2048
 
 static void Load()
@@ -230,6 +232,18 @@ static void DrawMenu()
 		if (loadedJons.size() && ImGui::MenuItem("Save All Jons"))
 			SaveAll();
 
+		if (loadedJons.size() && ImGui::MenuItem("Duplicate Current Jon"))
+		{
+			Jon* jon = new Jon();
+			*jon = *loadedJons[curJon];
+			
+			loadedJons.push_back(jon);
+			jon->jonName += "_Duplicate";
+			jonNames.push_back(jon->jonName.data());
+			jonSavePaths.push_back("");
+			curJon = loadedJons.size() - 1;
+		}
+
 		ImGui::EndMenu();
 	}
 
@@ -271,6 +285,10 @@ static void DrawMenu()
 		ImGui::Checkbox("Save Extended Boxes (Will crash in games older than strive)", &saveExtended);
 		ImGui::Checkbox("Save Granblue Boxes (Will crash in all except GBVS and GBVSR)", &saveGbvs);
 
+		ImGui::Separator();
+
+		ImGui::Checkbox("Reference Lines Should Draw On Top", &refLines);
+
 		ImGui::EndMenu();
 	}
 
@@ -305,10 +323,7 @@ static void DrawJonEdit()
 		{
 			ImGui::SetNextItemWidth(70.0f);
 			if (ImGui::Button("Add Texture"))
-			{
 				jon->usedTextures.push_back(std::string());
-				jon->usedTextures[jon->usedTextures.size() - 1].reserve(32);
-			}
 		}
 
 		if (!jon->usedTextures.size())
@@ -318,7 +333,9 @@ static void DrawJonEdit()
 			ImGui::PushID(i);
 			ImGui::SetNextItemWidth(120.0f);
 			//max 28 chars so we can fit file extention 
-			ImGui::InputText("", jon->usedTextures[i].data(), 28);
+			ImGui::InputText("", &jon->usedTextures[i]);
+			if (jon->usedTextures[i].size() > 28)
+				jon->usedTextures[i].resize(28);
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(50.0f);
 			if (ImGui::Button("Remove"))
@@ -630,4 +647,9 @@ Jon* GetCurrentJon()
 		return nullptr;
 
 	return loadedJons[curJon];
+}
+
+bool RefLinesShouldBeOnTop()
+{
+	return refLines;
 }
