@@ -142,6 +142,8 @@ static void Load()
 				jonNames.push_back(jon->jonName.data());
 				jonSavePaths.push_back(&paths.buf[paths.indices[i]]);
 			}
+
+			free(fileDat);
 		}
 
 	std::cout << std::endl;
@@ -243,15 +245,17 @@ static void DrawMenu()
 				nfdresult_t result = NFD_OpenDialogMultiple("png,bmp,dds", NULL, &paths);
 
 				if (result == NFD_OKAY)
-					loadThread = new std::thread([paths]() {
+				{
 					loading = true;
-					for (int i = 0; i < paths.count && !forceEndLoading; i++)
-					{
-						std::string str = &paths.buf[paths.indices[i]];
-						LoadTex(str);
-					}
-					loading = false;
-				});
+					loadThread = new std::thread([paths]() {
+						for (int i = 0; i < paths.count && !forceEndLoading; i++)
+						{
+							std::string str = &paths.buf[paths.indices[i]];
+							LoadTex(str);
+						}
+						loading = false;
+					});
+				}
 			}
 
 			if (ImGui::MenuItem("Clear All Textures"))
@@ -265,7 +269,7 @@ static void DrawMenu()
 	{
 		ImGui::Checkbox("Save Team RED Jon", &saveRed);
 		ImGui::Checkbox("Save Extended Boxes (Will crash in games older than strive)", &saveExtended);
-		ImGui::Checkbox("Save Granblue Boxes (Will crash in all except GBVS and GBVSR", &saveGbvs);
+		ImGui::Checkbox("Save Granblue Boxes (Will crash in all except GBVS and GBVSR)", &saveGbvs);
 
 		ImGui::EndMenu();
 	}

@@ -13,7 +13,6 @@ static std::queue<std::string> queueNames = std::queue<std::string>();
 
 void LoadTex(std::string& file)
 {
-
 	std::string texName = file;
 	std::replace(texName.begin(), texName.end(), '\\', '/');
 	texName = texName.substr(texName.find_last_of('/') + 1);
@@ -63,13 +62,15 @@ void UploadQueuedTextures()
 	std::lock_guard lock = std::lock_guard(queueMutex);
 	for (int i = 0; i < 100 && imageQueue.size(); i++)
 	{
+		Image img = imageQueue.front();
+
 		std::string texName = queueNames.front();
 		if (textureList.contains(texName))
 			UnloadTex(texName);
-		Texture2D tex = LoadTextureFromImage(imageQueue.front());
+		Texture2D tex = LoadTextureFromImage(img);
 		SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
 		textureList.insert({ texName, tex});
-		UnloadImage(imageQueue.front());
+		UnloadImage(img);
 		imageQueue.pop();
 		queueNames.pop();
 	}
