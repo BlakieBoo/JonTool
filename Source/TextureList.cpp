@@ -2,23 +2,27 @@
 
 #include <unordered_map>
 #include <algorithm>
+#include <mutex>
+#include <queue>
 
 static std::unordered_map<std::string, Texture2D> textureList = std::unordered_map<std::string, Texture2D>();
 
+static std::mutex queueMutex = std::mutex();
+static std::queue<Image> imageQueue = std::queue<Image>();
+static std::queue<std::string> queueNames = std::queue<std::string>();
+
 void LoadTex(std::string& file)
 {
+
 	std::string texName = file;
 	std::replace(texName.begin(), texName.end(), '\\', '/');
 	texName = texName.substr(texName.find_last_of('/') + 1);
 	texName = texName.substr(0, texName.find_last_of('.'));
 
-	if (textureList.contains(texName))
-		UnloadTex(texName);
-
-	Texture2D tex = LoadTexture(file.c_str());
-	SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
-	textureList.insert({ texName, tex });
-	std::cout << texName << std::endl;
+	Image img = LoadImage(file.c_str());
+	std::lock_guard lock = std::lock_guard(queueMutex);
+	imageQueue.push(img);
+	queueNames.push(texName);
 }
 
 bool TexIsLoaded(std::string& tex)
@@ -46,4 +50,27 @@ Texture2D* GetTexture(std::string& tex)
 		return &textureList[tex];
 
 	return nullptr;
+}
+
+bool TexQueuedToLoad()
+{
+	std::lock_guard lock = std::lock_guard(queueMutex);
+	return imageQueue.size();
+}
+
+void UploadQueuedTextures()
+{
+	std::lock_guard lock = std::lock_guard(queueMutex);
+	for (int i = 0; i < 100 && imageQueue.size(); i++)
+	{
+		std::string texName = queueNames.front();
+		if (textureList.contains(texName))
+			UnloadTex(texName);
+		Texture2D tex = LoadTextureFromImage(imageQueue.front());
+		SetTextureWrap(tex, TEXTURE_WRAP_CLAMP);
+		textureList.insert({ texName, tex});
+		UnloadImage(imageQueue.front());
+		imageQueue.pop();
+		queueNames.pop();
+	}
 }

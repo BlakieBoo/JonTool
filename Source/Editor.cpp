@@ -7,6 +7,7 @@
 #include <nfd.h>
 #include <fstream>
 #include <algorithm>
+#include <thread>
 
 static std::vector<Jon*> loadedJons = std::vector<Jon*>();
 static std::vector<char*> jonNames = std::vector<char*>();
@@ -92,6 +93,16 @@ static const char* LayerType_Names[] =
 	"Mouth"
 };
 
+static bool saveRed = false;
+static bool saveExtended = false;
+static bool saveGbvs = false;
+
+static std::thread* loadThread = nullptr;
+static bool loading = false;
+static bool forceEndLoading = false;
+
+#define SaveBufferSize 2048
+
 static void Load()
 {
 	nfdpathset_t paths;
@@ -140,7 +151,55 @@ static void Load()
 
 static void Save()
 {
+	try
+	{
+		if (jonSavePaths[curJon] == "")
+		{
+			nfdchar_t* path = nullptr;
+			nfdresult_t result = NFD_SaveDialog("jonbin", NULL, &path);
+			if (result != NFD_OKAY)
+				return;
+			else
+				jonSavePaths[curJon] = path;
+		}
 
+		uint8_t buffer[SaveBufferSize] = { 0 };
+		int fileSize = loadedJons[curJon]->SaveToBuffer(buffer, SaveBufferSize, saveRed, saveExtended, saveGbvs);
+		std::ofstream output = std::ofstream(jonSavePaths[curJon], std::ios::binary | std::ios::trunc);
+		output.write((char*)buffer, fileSize);
+	}
+	catch (std::exception ex)
+	{
+		std::cout << ex.what() << std::endl;
+	}
+}
+
+static void SaveAll()
+{
+	nfdchar_t* folder = nullptr;
+	nfdresult_t result = NFD_PickFolder(NULL, &folder);
+
+	if (result != NFD_OKAY)
+		return;
+
+	for (int i = 0; i < loadedJons.size(); i++)
+	{
+		try
+		{
+			jonSavePaths[i] = folder;
+			jonSavePaths[i] += loadedJons[i]->jonName;
+			jonSavePaths[i] += ".jonbin";
+
+			uint8_t buffer[SaveBufferSize] = { 0 };
+			int fileSize = loadedJons[i]->SaveToBuffer(buffer, SaveBufferSize, saveRed, saveExtended, saveGbvs);
+			std::ofstream output = std::ofstream(jonSavePaths[i], std::ios::binary | std::ios::trunc);
+			output.write((char*)buffer, fileSize);
+		}
+		catch (std::exception ex)
+		{
+			std::cout << ex.what() << std::endl;
+		}
+	}
 }
 
 static void DrawMenu()
@@ -166,26 +225,47 @@ static void DrawMenu()
 		if (loadedJons.size() && ImGui::MenuItem("Save Current Jon"))
 			Save();
 
+		if (loadedJons.size() && ImGui::MenuItem("Save All Jons"))
+			SaveAll();
+
 		ImGui::EndMenu();
 	}
 
 	if (ImGui::BeginMenu("Textures"))
 	{
-		if (ImGui::MenuItem("Load Textures"))
+		if (loading)
+			ImGui::Text("Textures are currently being loaded");
+		else
 		{
-			nfdpathset_t paths;
-			nfdresult_t result = NFD_OpenDialogMultiple("png,bmp,dds", NULL, &paths);
+			if (ImGui::MenuItem("Load Textures"))
+			{
+				nfdpathset_t paths;
+				nfdresult_t result = NFD_OpenDialogMultiple("png,bmp,dds", NULL, &paths);
 
-			if (result == NFD_OKAY)
-				for (int i = 0; i < paths.count; i++)
-				{
-					std::string str = &paths.buf[paths.indices[i]];
-					LoadTex(str);
-				}
+				if (result == NFD_OKAY)
+					loadThread = new std::thread([paths]() {
+					loading = true;
+					for (int i = 0; i < paths.count && !forceEndLoading; i++)
+					{
+						std::string str = &paths.buf[paths.indices[i]];
+						LoadTex(str);
+					}
+					loading = false;
+				});
+			}
+
+			if (ImGui::MenuItem("Clear All Textures"))
+				ClearTexList();
 		}
 
-		if (ImGui::MenuItem("Clear All Textures"))
-			ClearTexList();
+		ImGui::EndMenu();
+	}
+
+	if (ImGui::BeginMenu("Options"))
+	{
+		ImGui::Checkbox("Save Team RED Jon", &saveRed);
+		ImGui::Checkbox("Save Extended Boxes (Will crash in games older than strive)", &saveExtended);
+		ImGui::Checkbox("Save Granblue Boxes (Will crash in all except GBVS and GBVSR", &saveGbvs);
 
 		ImGui::EndMenu();
 	}
@@ -342,12 +422,7 @@ static void DrawJonEdit()
 			{
 				ImGui::SliderInt("Texture", (int*)&sprite.spriteIndex, 0, jon->usedTextures.size() - 1);
 				if (jon->usedTextures.size())
-				{
-					if (sprite.spriteIndex)
-						ImGui::Text(jon->usedTextures[std::clamp(sprite.spriteIndex, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
-					else
-						ImGui::Text(jon->usedTextures[std::clamp((uint32_t)curSprite, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
-				}
+					ImGui::Text(jon->usedTextures[std::clamp((uint32_t)curSprite, 0U, (uint32_t)(jon->usedTextures.size() - 1))].c_str());
 				else
 					ImGui::Text("Jon has no textures to use.");
 			}
@@ -448,6 +523,15 @@ static void DrawJonEdit()
 		ImGui::TreePop();
 	}
 
+	if (loading)
+		ImGui::Text("Textures are currently being loaded");
+	else if (loadThread != nullptr)
+	{
+		loadThread->join();
+		delete loadThread;
+		loadThread = nullptr;
+	}
+
 	ImGui::End();
 }
 
@@ -518,6 +602,15 @@ void DrawEditor(float delta)
 
 	DrawJonEdit();
 	DrawTimeline(delta);
+}
+
+void DestroyEditor()
+{
+	if (loadThread != nullptr)
+	{
+		forceEndLoading = true;
+		loadThread->join();
+	}
 }
 
 bool IsEditorHovered()

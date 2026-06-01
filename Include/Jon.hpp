@@ -95,4 +95,5 @@ public:
 	std::vector<JonCollisionRect> collisions = std::vector<JonCollisionRect>();
 
 	bool LoadFromFile(uint8_t* dataPtr, int fileSize);
+	int SaveToBuffer(uint8_t* buffer, int bufferSize, bool saveRed, bool saveExtended, bool saveGbvs);
 };

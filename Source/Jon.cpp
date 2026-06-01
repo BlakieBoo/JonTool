@@ -1,5 +1,7 @@
 #include "Jon.hpp"
 
+#include <algorithm>
+
 bool Jon::LoadFromFile(uint8_t* dataPtr, int fileSize)
 {
 	uint8_t* data = dataPtr;
@@ -91,4 +93,64 @@ bool Jon::LoadFromFile(uint8_t* dataPtr, int fileSize)
 		}
 
 	return true;
+}
+
+int Jon::SaveToBuffer(uint8_t* buffer, int bufferSize, bool saveRed, bool saveExtended, bool saveGbvs)
+{
+	uint8_t* ptr = buffer;
+
+	*(uint32_t*)ptr = *(uint32_t*)"JONB";
+	ptr += 4;
+
+	*(uint16_t*)ptr = usedTextures.size();
+	ptr += 2;
+
+	for (std::string tex : usedTextures)
+	{
+		tex += saveRed ? ".jpg" : ".bmp";
+		memcpy(ptr, tex.c_str(), tex.size());
+		ptr += 32;
+	}
+
+	*ptr = saveExtended ? CTYPE_NUM : CTYPE_NUM - 1;
+	*ptr += 3;
+	ptr++;
+	*(uint16_t*)ptr = 0; //dont care about padding
+	ptr += 2;
+	*(uint16_t*)ptr = sprites.size();
+	ptr += 2;
+	*(uint16_t*)ptr = 0;
+	ptr += 2;
+
+	uint16_t boxTypeCounts[CTYPE_NUM] = { 0 };
+	for (int i = 0; i < collisions.size(); i++)
+		boxTypeCounts[collisions[i].collisionType]++;
+
+	memcpy(ptr, boxTypeCounts, (saveExtended ? CTYPE_NUM : CTYPE_NUM - 1) * 2);
+	ptr += (saveExtended ? CTYPE_NUM : CTYPE_NUM - 1) * 2;
+
+	for (int i = 0; i < sprites.size(); i++)
+	{
+		*(JonSpriteRect*)ptr = sprites[i];
+		ptr += sizeof(JonSpriteRect);
+	}
+
+	//jons do need to be sorted by type so ill do that here
+	std::vector<JonCollisionRect> sortedCollisions = collisions;
+	std::sort(sortedCollisions.begin(), sortedCollisions.end(), [](const JonCollisionRect& a, const JonCollisionRect& b) {
+		return a.collisionType < b.collisionType;
+		});
+
+	for (int i = 0; i < sortedCollisions.size(); i++)
+	{
+		if (!saveExtended && sortedCollisions[i].collisionType == CTYPE_EXTEND_JON)
+			break;
+
+		*(JonCollisionRect*)ptr = sortedCollisions[i];
+		ptr += sizeof(JonCollisionRect);
+		if (saveGbvs)
+			ptr += 4;
+	}
+
+	return ptr - buffer;
 }

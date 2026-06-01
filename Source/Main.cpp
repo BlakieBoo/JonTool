@@ -1,6 +1,7 @@
 #include "Common.hpp"
 #include "Editor.hpp"
 #include "Scene.hpp"
+#include "TextureList.hpp"
 #include <rlImGui.h>
 #include <imgui.h>
 #include <rlgl.h>
@@ -9,8 +10,10 @@ int main(int argc, char* argv[])
 {
 	std::cout << "Hello World!" << std::endl;
 
+	SetTraceLogLevel(LOG_ERROR);
 	SetConfigFlags(FLAG_WINDOW_RESIZABLE);
 	InitWindow(1280, 720, "JonTool");
+	SetTargetFPS(60);
 	rlImGuiSetup(true);
 	ImGuiIO& io = ImGui::GetIO();
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -27,8 +30,12 @@ int main(int argc, char* argv[])
 
 		rlImGuiEnd();
 		EndDrawing();
+
+		UploadQueuedTextures();
 	}
 
+	DestroyEditor();
 	rlImGuiShutdown();
-	CloseWindow();
+	//dont care about shutting down cause it just makes closing slower
+	//CloseWindow();
 }
