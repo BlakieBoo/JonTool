@@ -112,7 +112,7 @@ int Jon::SaveToBuffer(uint8_t* buffer, int bufferSize, bool saveRed, bool saveEx
 		ptr += 32;
 	}
 
-	*ptr = saveExtended ? CTYPE_NUM : CTYPE_NUM - 1;
+	*ptr = saveExtended ? CTYPE_NUM : CTYPE_NUM - 2;
 	*ptr += 3;
 	ptr++;
 	*(uint16_t*)ptr = 0; //dont care about padding
@@ -126,8 +126,8 @@ int Jon::SaveToBuffer(uint8_t* buffer, int bufferSize, bool saveRed, bool saveEx
 	for (int i = 0; i < collisions.size(); i++)
 		boxTypeCounts[collisions[i].collisionType]++;
 
-	memcpy(ptr, boxTypeCounts, (saveExtended ? CTYPE_NUM : CTYPE_NUM - 1) * 2);
-	ptr += (saveExtended ? CTYPE_NUM : CTYPE_NUM - 1) * 2;
+	memcpy(ptr, boxTypeCounts, (saveExtended ? CTYPE_NUM : CTYPE_NUM - 2) * 2);
+	ptr += (saveExtended ? CTYPE_NUM : CTYPE_NUM - 2) * 2;
 
 	for (int i = 0; i < sprites.size(); i++)
 	{

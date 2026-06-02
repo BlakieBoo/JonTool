@@ -47,6 +47,7 @@ enum CTYPE
 	CTYPE_PRIVATE_POINT_3 = 16,
 	//this isnt in the tag decomp its added in strive
 	CTYPE_EXTEND_JON = 17, 
+	CTYPE_EXTEND_JON_2 = 18, //strive follow up boxes, idk the actual enum name lmao
 	CTYPE_NUM
 };
 

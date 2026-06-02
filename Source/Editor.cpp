@@ -54,7 +54,8 @@ static const char* CTYPE_Names[] =
 	"Private Point 1",
 	"Private Point 2",
 	"Private Point 3",
-	"Extra Point (Afro Pos)"
+	"Extra Point (Afro Pos)",
+	"Extra Box (Follow Up Hit)"
 };
 
 static enum BoxType
@@ -83,7 +84,8 @@ static const BoxType CTYPE_Types[] =
 	Point,
 	Point,
 	Point,
-	Point
+	Point,
+	Rect
 };
 
 static const char* LayerType_Names[] =

@@ -34,7 +34,8 @@ static const BoxType CTYPE_Types[] =
 	Point,
 	Point,
 	Point,
-	Point
+	Point,
+	Rect
 };
 
 static const Color CTYPE_Colors[] =
@@ -56,7 +57,8 @@ static const Color CTYPE_Colors[] =
 	WHITE,
 	WHITE,
 	WHITE,
-	BROWN
+	BROWN,
+	MAROON
 };
 
 static const BlendMode TTYPE_Blend[] =
